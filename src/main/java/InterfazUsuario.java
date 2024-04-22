@@ -1,14 +1,20 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+// Asegúrate de que estas clases estén correctamente definidas e importadas.
 import Mapas_Asociacion.GestorMapas;
+import Indexacion_Visualizacion.IndexadorArchivos;
+import Indexacion_Visualizacion.VisualizadorArchivos;
 
 public class InterfazUsuario extends JFrame {
     private JTextField txtPrimerElemento, txtSegundoElemento;
     private JTextArea areaPares;
-    private JButton btnAgregar, btnEliminar, btnMostrar;
+    private JButton btnAgregar, btnEliminar;
 
     private JTextField txtVenta;
     private JButton btnAgregarVenta, btnOrdenarVentas;
@@ -21,11 +27,15 @@ public class InterfazUsuario extends JFrame {
 
     private List<String> ventas;
     private GestorMapas gestorMapas;
+    private IndexadorArchivos indexadorArchivos;
+    private VisualizadorArchivos visualizadorArchivos;
 
     public InterfazUsuario() {
         super("Gestión y Análisis de Datos Multidimensionales");
         ventas = new ArrayList<>();
         gestorMapas = new GestorMapas();
+        indexadorArchivos = new IndexadorArchivos();
+        visualizadorArchivos = new VisualizadorArchivos();
         initializeUI();
     }
 
@@ -38,26 +48,24 @@ public class InterfazUsuario extends JFrame {
         JPanel panelDatos = createDataManagementPanel();
         JPanel panelVentas = createSalesPanel();
         JPanel panelMapas = createMapPanel();
+        JPanel panelIndexacion = createIndexacionPanel();
 
         tabbedPane.addTab("Gestión de Pares", panelDatos);
         tabbedPane.addTab("Gestión de Ventas", panelVentas);
         tabbedPane.addTab("Mapas y Asociación", panelMapas);
+        tabbedPane.addTab("Indexación y Visualización", panelIndexacion);
 
         add(tabbedPane);
-
         setLocationRelativeTo(null);
         setVisible(true);
     }
 
     private JPanel createDataManagementPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(3, 2, 10, 10));
-
+        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         txtPrimerElemento = new JTextField();
         txtSegundoElemento = new JTextField();
         btnAgregar = new JButton("Agregar Pareja");
         btnEliminar = new JButton("Eliminar Pareja");
-        btnMostrar = new JButton("Mostrar Parejas");
         areaPares = new JTextArea(5, 30);
         areaPares.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(areaPares);
@@ -68,7 +76,6 @@ public class InterfazUsuario extends JFrame {
         panel.add(txtSegundoElemento);
         panel.add(btnAgregar);
         panel.add(btnEliminar);
-        panel.add(btnMostrar);
         panel.add(scrollPane);
 
         btnAgregar.addActionListener(this::agregarPareja);
@@ -78,9 +85,7 @@ public class InterfazUsuario extends JFrame {
     }
 
     private JPanel createSalesPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(3, 2, 10, 10));
-
+        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         txtVenta = new JTextField();
         btnAgregarVenta = new JButton("Agregar Venta");
         btnOrdenarVentas = new JButton("Ordenar Ventas");
@@ -103,9 +108,7 @@ public class InterfazUsuario extends JFrame {
     }
 
     private JPanel createMapPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(3, 2, 10, 10));
-
+        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         txtClave = new JTextField();
         txtValor = new JTextField();
         btnAgregarMapa = new JButton("Agregar Asociación");
@@ -128,24 +131,40 @@ public class InterfazUsuario extends JFrame {
         return panel;
     }
 
+    private JPanel createIndexacionPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        JButton btnIndexar = new JButton("Indexar Directorio");
+        JButton btnMostrarArchivos = new JButton("Mostrar Archivos Indexados");
+        JTextArea areaVisualizacionArchivos = new JTextArea(10, 50);
+        areaVisualizacionArchivos.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(areaVisualizacionArchivos);
+
+        panel.add(btnIndexar, BorderLayout.NORTH);
+        panel.add(btnMostrarArchivos, BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.SOUTH);
+
+        btnIndexar.addActionListener(e -> indexarDirectorio());
+        btnMostrarArchivos.addActionListener(e -> mostrarArchivos(areaVisualizacionArchivos));
+
+        return panel;
+    }
+
+    // Methods for managing pairs
     private void agregarPareja(ActionEvent e) {
-        String primerElemento = txtPrimerElemento.getText();
-        String segundoElemento = txtSegundoElemento.getText();
+        String primerElemento = txtPrimerElemento.getText().trim();
+        String segundoElemento = txtSegundoElemento.getText().trim();
         areaPares.append(primerElemento + " - " + segundoElemento + "\n");
         txtPrimerElemento.setText("");
         txtSegundoElemento.setText("");
     }
 
     private void eliminarPareja(ActionEvent e) {
-        String primerElemento = txtPrimerElemento.getText();
-        String segundoElemento = txtSegundoElemento.getText();
-        areaPares.setText(areaPares.getText().replace(primerElemento + " - " + segundoElemento + "\n", ""));
-        txtPrimerElemento.setText("");
-        txtSegundoElemento.setText("");
+        areaPares.setText(""); // Clears the text area
     }
 
-        private void agregarVenta(ActionEvent e) {
-        String venta = txtVenta.getText();
+    // Methods for managing sales
+    private void agregarVenta(ActionEvent e) {
+        String venta = txtVenta.getText().trim();
         if (!venta.isEmpty()) {
             ventas.add(venta);
             txtVenta.setText("");
@@ -154,24 +173,42 @@ public class InterfazUsuario extends JFrame {
     }
 
     private void ordenarVentas(ActionEvent e) {
-        boolean ascendente = cmbOrdenamiento.getSelectedItem().equals("Ascendente");
-        ventas.sort(ascendente ? String::compareTo : (a, b) -> b.compareTo(a));
+        Collections.sort(ventas);
         areaVentas.setText(String.join("\n", ventas));
     }
 
+    // Methods for managing key-value associations
     private void agregarAsociacion(ActionEvent e) {
-        String clave = txtClave.getText();
-        String valor = txtValor.getText();
+        String clave = txtClave.getText().trim();
+        String valor = txtValor.getText().trim();
         gestorMapas.agregarAsociacion(clave, valor);
-        areaMapaResultados.append("Asociación agregada: " + clave + " -> " + valor + "\n");
+        areaMapaResultados.append(clave + " => " + valor + "\n");
         txtClave.setText("");
         txtValor.setText("");
     }
 
     private void buscarAsociacion(ActionEvent e) {
-        String clave = txtClave.getText();
-        String resultado = gestorMapas.recuperarValor(clave);
-        areaMapaResultados.append("Valor para '" + clave + "': " + resultado + "\n");
+        String clave = txtClave.getText().trim();
+        String valor = gestorMapas.recuperarValor(clave);
+        areaMapaResultados.append("Valor para '" + clave + "': " + valor + "\n");
+    }
+
+    // Methods for indexing and displaying files
+    private void indexarDirectorio() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int returnValue = fileChooser.showOpenDialog(null);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            File selectedDirectory = fileChooser.getSelectedFile();
+            indexadorArchivos.indexarDirectorio(selectedDirectory);
+            JOptionPane.showMessageDialog(this, "Directorio indexado con éxito.");
+        }
+    }
+
+    private void mostrarArchivos(JTextArea displayArea) {
+        List<String> rutas = indexadorArchivos.getListaRutas();
+        visualizadorArchivos.ordenarYMostrarArchivos(rutas);
+        displayArea.setText(String.join("\n", rutas));
     }
 
     public static void main(String[] args) {
