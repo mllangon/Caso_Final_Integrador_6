@@ -19,8 +19,11 @@ public class GestorDatos<T, U> {
         System.out.println("Pareja eliminada: " + parejaAEliminar);
     }
 
-    public void mostrarPares() {
-        System.out.println("Listando todas las parejas:");
-        listaPares.mostrarPares();
+    public String mostrarPares() {
+        StringBuilder sb = new StringBuilder();
+        for (Pareja<T, U> pareja : listaPares.getPares()) {
+            sb.append(pareja.toString()).append("\n");
+        }
+        return sb.toString();
     }
 }

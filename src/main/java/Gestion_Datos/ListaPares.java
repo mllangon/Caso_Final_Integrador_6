@@ -18,6 +18,10 @@ public class ListaPares<T, U> {
         pares.remove(pareja);
     }
 
+    public List<Pareja<T, U>> getPares() {
+        return pares;
+    }
+
     public void mostrarPares() {
         pares.forEach(System.out::println);
     }
