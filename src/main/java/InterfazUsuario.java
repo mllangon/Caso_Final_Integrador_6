@@ -1,66 +1,93 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-// Asegúrate de que estas clases estén correctamente definidas e importadas.
+import Gestion_Datos.GestorDatos;
 import Mapas_Asociacion.GestorMapas;
 import Indexacion_Visualizacion.IndexadorArchivos;
 import Indexacion_Visualizacion.VisualizadorArchivos;
 
 public class InterfazUsuario extends JFrame {
-    private JTextField txtPrimerElemento, txtSegundoElemento;
-    private JTextArea areaPares;
-    private JButton btnAgregar, btnEliminar;
-
-    private JTextField txtVenta;
-    private JButton btnAgregarVenta, btnOrdenarVentas;
+    private JPanel mainPanel;
+    private JTextField txtPrimerElemento, txtSegundoElemento, txtVenta, txtClave, txtValor;
+    private JButton btnAgregar, btnEliminar, btnAgregarVenta, btnOrdenarVentas, btnAgregarMapa, btnBuscarMapa;
+    private JTextArea areaPares, areaVentas, areaMapaResultados;
     private JComboBox<String> cmbOrdenamiento;
-    private JTextArea areaVentas;
-
-    private JTextField txtClave, txtValor;
-    private JButton btnAgregarMapa, btnBuscarMapa;
-    private JTextArea areaMapaResultados;
-
-    private List<String> ventas;
-    private GestorMapas gestorMapas;
-    private IndexadorArchivos indexadorArchivos;
-    private VisualizadorArchivos visualizadorArchivos;
-
+    private List<String> ventas = new ArrayList<>();
+    private GestorDatos<String, Integer> gestorDatos = new GestorDatos<>();
+    private GestorMapas gestorMapas = new GestorMapas();
+    private IndexadorArchivos indexadorArchivos = new IndexadorArchivos();
+    private VisualizadorArchivos visualizadorArchivos = new VisualizadorArchivos();
     public InterfazUsuario() {
         super("Gestión y Análisis de Datos Multidimensionales");
-        ventas = new ArrayList<>();
-        gestorMapas = new GestorMapas();
-        indexadorArchivos = new IndexadorArchivos();
-        visualizadorArchivos = new VisualizadorArchivos();
-        initializeUI();
+        prepareGUI();
     }
 
-    private void initializeUI() {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    private void prepareGUI() {
         setSize(800, 600);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        mainPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setPaint(new GradientPaint(0, 0, Color.RED, getWidth(), getHeight(), Color.BLACK));
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        setContentPane(mainPanel);
 
         JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.add("Gestión de Pares", createDataManagementPanel(loadIcon("/src/main/resources/descarga.png")));
+        tabbedPane.add("Gestión de Ventas", createSalesPanel(loadIcon("/src/main/resources/ventas.png")));
+        tabbedPane.add("Mapas y Asociación", createMapPanel(loadIcon("/src/main/resources/mapa.png")));
+        tabbedPane.add("Indexación y Visualización", createIndexacionPanel(loadIcon("/src/main/resources/indexacion.png")));
 
-        JPanel panelDatos = createDataManagementPanel();
-        JPanel panelVentas = createSalesPanel();
-        JPanel panelMapas = createMapPanel();
-        JPanel panelIndexacion = createIndexacionPanel();
+        mainPanel.add(tabbedPane, BorderLayout.CENTER);
 
-        tabbedPane.addTab("Gestión de Pares", panelDatos);
-        tabbedPane.addTab("Gestión de Ventas", panelVentas);
-        tabbedPane.addTab("Mapas y Asociación", panelMapas);
-        tabbedPane.addTab("Indexación y Visualización", panelIndexacion);
-
-        add(tabbedPane);
-        setLocationRelativeTo(null);
-        setVisible(true);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                showWelcomeScreen();
+            }
+        });
     }
 
-    private JPanel createDataManagementPanel() {
+    private ImageIcon loadIcon(String path) {
+        URL imgURL = getClass().getResource(path);
+        if (imgURL != null) {
+            return new ImageIcon(imgURL);
+        } else {
+            System.err.println("Couldn't find file: " + path);
+            return null;
+        }
+    }
+
+    private void showWelcomeScreen() {
+        JDialog welcomeDialog = new JDialog(this, "Bienvenido", true);
+        welcomeDialog.setLayout(new BorderLayout());
+        welcomeDialog.setSize(400, 300);
+        welcomeDialog.setLocationRelativeTo(this);
+        JLabel welcomeLabel = new JLabel("Bienvenido a la Gestión y Análisis de Datos", SwingConstants.CENTER);
+        welcomeLabel.setFont(new Font("Serif", Font.BOLD, 20));
+        welcomeDialog.add(welcomeLabel, BorderLayout.CENTER);
+        Timer timer = new Timer(2000, e -> welcomeDialog.dispose());
+        timer.setRepeats(false);
+        timer.start();
+        welcomeDialog.setVisible(true);
+    }
+
+
+    private JPanel createDataManagementPanel(ImageIcon imageIcon) {
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         txtPrimerElemento = new JTextField();
         txtSegundoElemento = new JTextField();
@@ -84,7 +111,7 @@ public class InterfazUsuario extends JFrame {
         return panel;
     }
 
-    private JPanel createSalesPanel() {
+    private JPanel createSalesPanel(ImageIcon imageIcon) {
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         txtVenta = new JTextField();
         btnAgregarVenta = new JButton("Agregar Venta");
@@ -107,7 +134,7 @@ public class InterfazUsuario extends JFrame {
         return panel;
     }
 
-    private JPanel createMapPanel() {
+    private JPanel createMapPanel(ImageIcon imageIcon) {
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         txtClave = new JTextField();
         txtValor = new JTextField();
@@ -131,7 +158,7 @@ public class InterfazUsuario extends JFrame {
         return panel;
     }
 
-    private JPanel createIndexacionPanel() {
+    private JPanel createIndexacionPanel(ImageIcon imageIcon) {
         JPanel panel = new JPanel(new BorderLayout());
         JButton btnIndexar = new JButton("Indexar Directorio");
         JButton btnMostrarArchivos = new JButton("Mostrar Archivos Indexados");
