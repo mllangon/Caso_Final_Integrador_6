@@ -1,28 +1,27 @@
-// Pareja.java
 package Gestion_Datos;
 
-public class Pareja {
-    private int primerElemento;
-    private int segundoElemento;
+public class Pareja<T, U> {
+    private T primerElemento;
+    private U segundoElemento;
 
-    public Pareja(int primerElemento, int segundoElemento) {
+    public Pareja(T primerElemento, U segundoElemento) {
         this.primerElemento = primerElemento;
         this.segundoElemento = segundoElemento;
     }
 
-    public int getPrimerElemento() {
+    public T getPrimerElemento() {
         return primerElemento;
     }
 
-    public void setPrimerElemento(int primerElemento) {
+    public void setPrimerElemento(T primerElemento) {
         this.primerElemento = primerElemento;
     }
 
-    public int getSegundoElemento() {
+    public U getSegundoElemento() {
         return segundoElemento;
     }
 
-    public void setSegundoElemento(int segundoElemento) {
+    public void setSegundoElemento(U segundoElemento) {
         this.segundoElemento = segundoElemento;
     }
 
