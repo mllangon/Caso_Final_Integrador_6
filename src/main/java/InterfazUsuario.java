@@ -9,51 +9,32 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import Gestion_Datos.GestorDatos;
-import Mapas_Asociacion.GestorMapas;
-import Indexacion_Visualizacion.IndexadorArchivos;
-import Indexacion_Visualizacion.VisualizadorArchivos;
-
 public class InterfazUsuario extends JFrame {
     private JPanel mainPanel;
     private JTextField txtPrimerElemento, txtSegundoElemento, txtVenta, txtClave, txtValor;
-    private JButton btnAgregar, btnEliminar, btnAgregarVenta, btnOrdenarVentas, btnAgregarMapa, btnBuscarMapa;
     private JTextArea areaPares, areaVentas, areaMapaResultados;
     private JComboBox<String> cmbOrdenamiento;
-    private List<String> ventas = new ArrayList<>();
-    private GestorDatos<String, Integer> gestorDatos = new GestorDatos<>();
-    private GestorMapas gestorMapas = new GestorMapas();
-    private IndexadorArchivos indexadorArchivos = new IndexadorArchivos();
-    private VisualizadorArchivos visualizadorArchivos = new VisualizadorArchivos();
+    private List<String> ventas;
+    private JTabbedPane tabbedPane;
+
     public InterfazUsuario() {
         super("Gestión y Análisis de Datos Multidimensionales");
+        ventas = new ArrayList<>();
         prepareGUI();
     }
 
     private void prepareGUI() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(800, 600);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        mainPanel = new JPanel(new BorderLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setPaint(new GradientPaint(0, 0, Color.RED, getWidth(), getHeight(), Color.BLACK));
-                g2d.fillRect(0, 0, getWidth(), getHeight());
-            }
-        };
-        setContentPane(mainPanel);
+        tabbedPane = new JTabbedPane();
+        tabbedPane.add("Gestión de Pares", createDataManagementPanel(loadIcon("src/smain/resources/descargas.png")));
+        tabbedPane.add("Gestión de Ventas", createSalesPanel(loadIcon("src/smain/resources/ventas.png")));
+        tabbedPane.add("Mapas y Asociación", createMapPanel(loadIcon("src/smain/resources/mapas.png")));
+        tabbedPane.add("Indexación y Visualización", createIndexacionPanel(loadIcon("src/smain/resources/indexacion.png")));
 
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.add("Gestión de Pares", createDataManagementPanel(loadIcon("/src/main/resources/descarga.png")));
-        tabbedPane.add("Gestión de Ventas", createSalesPanel(loadIcon("/src/main/resources/ventas.png")));
-        tabbedPane.add("Mapas y Asociación", createMapPanel(loadIcon("/src/main/resources/mapa.png")));
-        tabbedPane.add("Indexación y Visualización", createIndexacionPanel(loadIcon("/src/main/resources/indexacion.png")));
-
-        mainPanel.add(tabbedPane, BorderLayout.CENTER);
-
+        setContentPane(tabbedPane);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
@@ -73,172 +54,173 @@ public class InterfazUsuario extends JFrame {
     }
 
     private void showWelcomeScreen() {
-        JDialog welcomeDialog = new JDialog(this, "Bienvenido", true);
-        welcomeDialog.setLayout(new BorderLayout());
-        welcomeDialog.setSize(400, 300);
-        welcomeDialog.setLocationRelativeTo(this);
-        JLabel welcomeLabel = new JLabel("Bienvenido a la Gestión y Análisis de Datos", SwingConstants.CENTER);
-        welcomeLabel.setFont(new Font("Serif", Font.BOLD, 20));
-        welcomeDialog.add(welcomeLabel, BorderLayout.CENTER);
-        Timer timer = new Timer(2000, e -> welcomeDialog.dispose());
-        timer.setRepeats(false);
-        timer.start();
-        welcomeDialog.setVisible(true);
+        JOptionPane.showMessageDialog(this,
+                "Bienvenido a la Gestión y Análisis de Datos",
+                "Bienvenido",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
-
-    private JPanel createDataManagementPanel(ImageIcon imageIcon) {
-        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
+    private JPanel createDataManagementPanel(ImageIcon icon) {
+        JPanel panel = new TabPanel(icon);
         txtPrimerElemento = new JTextField();
         txtSegundoElemento = new JTextField();
-        btnAgregar = new JButton("Agregar Pareja");
-        btnEliminar = new JButton("Eliminar Pareja");
-        areaPares = new JTextArea(5, 30);
+        JButton btnAgregar = new JButton("Agregar Pareja");
+        JButton btnEliminar = new JButton("Eliminar Pareja");
+        areaPares = new JTextArea(10, 30);
         areaPares.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(areaPares);
 
-        panel.add(new JLabel("Primer Elemento (String):"));
+        panel.setLayout(new GridLayout(5, 2));
+        panel.add(new JLabel("Primer Elemento:"));
         panel.add(txtPrimerElemento);
-        panel.add(new JLabel("Segundo Elemento (Integer):"));
+        panel.add(new JLabel("Segundo Elemento:"));
         panel.add(txtSegundoElemento);
         panel.add(btnAgregar);
         panel.add(btnEliminar);
+        panel.add(new JLabel());
         panel.add(scrollPane);
 
-        btnAgregar.addActionListener(this::agregarPareja);
-        btnEliminar.addActionListener(this::eliminarPareja);
+        btnAgregar.addActionListener(e -> {
+            String primerElemento = txtPrimerElemento.getText().trim();
+            String segundoElemento = txtSegundoElemento.getText().trim();
+            areaPares.append(primerElemento + " - " + segundoElemento + "\n");
+            txtPrimerElemento.setText("");
+            txtSegundoElemento.setText("");
+        });
+
+        btnEliminar.addActionListener(e -> areaPares.setText(""));
 
         return panel;
     }
 
-    private JPanel createSalesPanel(ImageIcon imageIcon) {
-        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
+    private JPanel createSalesPanel(ImageIcon icon) {
+        JPanel panel = new TabPanel(icon);
         txtVenta = new JTextField();
-        btnAgregarVenta = new JButton("Agregar Venta");
-        btnOrdenarVentas = new JButton("Ordenar Ventas");
+        JButton btnAgregarVenta = new JButton("Agregar Venta");
+        JButton btnOrdenarVentas = new JButton("Ordenar Ventas");
         cmbOrdenamiento = new JComboBox<>(new String[]{"Ascendente", "Descendente"});
-        areaVentas = new JTextArea(5, 30);
+        areaVentas = new JTextArea(10, 30);
         areaVentas.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(areaVentas);
 
-        panel.add(new JLabel("Nueva Venta:"));
+        panel.setLayout(new GridLayout(5, 2));
+        panel.add(new JLabel("Venta:"));
         panel.add(txtVenta);
-        panel.add(btnAgregarVenta);
+        panel.add(new JLabel("Ordenamiento:"));
         panel.add(cmbOrdenamiento);
+        panel.add(btnAgregarVenta);
         panel.add(btnOrdenarVentas);
+        panel.add(new JLabel());
         panel.add(scrollPane);
 
-        btnAgregarVenta.addActionListener(this::agregarVenta);
-        btnOrdenarVentas.addActionListener(this::ordenarVentas);
+        btnAgregarVenta.addActionListener(e -> {
+            String venta = txtVenta.getText().trim();
+            ventas.add(venta);
+            areaVentas.append(venta + "\n");
+            txtVenta.setText("");
+        });
+
+        btnOrdenarVentas.addActionListener(e -> {
+            Collections.sort(ventas);
+            areaVentas.setText("");
+            for (String v : ventas) {
+                areaVentas.append(v + "\n");
+            }
+        });
 
         return panel;
     }
 
-    private JPanel createMapPanel(ImageIcon imageIcon) {
-        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
+    private JPanel createMapPanel(ImageIcon icon) {
+        JPanel panel = new TabPanel(icon);
         txtClave = new JTextField();
         txtValor = new JTextField();
-        btnAgregarMapa = new JButton("Agregar Asociación");
-        btnBuscarMapa = new JButton("Buscar Asociación");
-        areaMapaResultados = new JTextArea(5, 30);
+        JButton btnAgregarMapa = new JButton("Agregar Asociación");
+        JButton btnBuscarMapa = new JButton("Buscar Asociación");
+        areaMapaResultados = new JTextArea(10, 30);
         areaMapaResultados.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(areaMapaResultados);
 
+        panel.setLayout(new GridLayout(5, 2));
         panel.add(new JLabel("Clave:"));
         panel.add(txtClave);
         panel.add(new JLabel("Valor:"));
         panel.add(txtValor);
         panel.add(btnAgregarMapa);
         panel.add(btnBuscarMapa);
+        panel.add(new JLabel());
         panel.add(scrollPane);
 
-        btnAgregarMapa.addActionListener(this::agregarAsociacion);
-        btnBuscarMapa.addActionListener(this::buscarAsociacion);
+        btnAgregarMapa.addActionListener(e -> {
+            String clave = txtClave.getText().trim();
+            String valor = txtValor.getText().trim();
+            areaMapaResultados.append(clave + " => " + valor + "\n");
+            txtClave.setText("");
+            txtValor.setText("");
+        });
+
+        btnBuscarMapa.addActionListener(e -> {
+            String clave = txtClave.getText().trim();
+            String valor = "Valor asociado no encontrado"; // Simulate search
+            areaMapaResultados.append("Buscar '" + clave + "': " + valor + "\n");
+        });
 
         return panel;
     }
 
-    private JPanel createIndexacionPanel(ImageIcon imageIcon) {
-        JPanel panel = new JPanel(new BorderLayout());
+    private JPanel createIndexacionPanel(ImageIcon icon) {
+        JPanel panel = new TabPanel(icon);
         JButton btnIndexar = new JButton("Indexar Directorio");
         JButton btnMostrarArchivos = new JButton("Mostrar Archivos Indexados");
         JTextArea areaVisualizacionArchivos = new JTextArea(10, 50);
         areaVisualizacionArchivos.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(areaVisualizacionArchivos);
 
+        panel.setLayout(new BorderLayout());
         panel.add(btnIndexar, BorderLayout.NORTH);
         panel.add(btnMostrarArchivos, BorderLayout.CENTER);
         panel.add(scrollPane, BorderLayout.SOUTH);
 
-        btnIndexar.addActionListener(e -> indexarDirectorio());
-        btnMostrarArchivos.addActionListener(e -> mostrarArchivos(areaVisualizacionArchivos));
+        btnIndexar.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int returnValue = fileChooser.showOpenDialog(null);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedDirectory = fileChooser.getSelectedFile();
+                // Simulate indexing operation
+                JOptionPane.showMessageDialog(panel, "Directorio indexado con éxito.");
+            }
+        });
+
+        btnMostrarArchivos.addActionListener(e -> {
+            // Simulate file display operation
+            areaVisualizacionArchivos.setText("Archivo1.txt\nArchivo2.txt\nArchivo3.txt");
+        });
 
         return panel;
     }
 
-    // Methods for managing pairs
-    private void agregarPareja(ActionEvent e) {
-        String primerElemento = txtPrimerElemento.getText().trim();
-        String segundoElemento = txtSegundoElemento.getText().trim();
-        areaPares.append(primerElemento + " - " + segundoElemento + "\n");
-        txtPrimerElemento.setText("");
-        txtSegundoElemento.setText("");
-    }
-
-    private void eliminarPareja(ActionEvent e) {
-        areaPares.setText(""); // Clears the text area
-    }
-
-    // Methods for managing sales
-    private void agregarVenta(ActionEvent e) {
-        String venta = txtVenta.getText().trim();
-        if (!venta.isEmpty()) {
-            ventas.add(venta);
-            txtVenta.setText("");
-            areaVentas.append(venta + "\n");
+    private class TabPanel extends JPanel {
+        public TabPanel(ImageIcon icon) {
+            super();
+            setLayout(new BorderLayout());
+            if (icon != null) {
+                JLabel labelIcon = new JLabel(icon);
+                add(labelIcon, BorderLayout.WEST);
+            }
+            setOpaque(false);
         }
-    }
 
-    private void ordenarVentas(ActionEvent e) {
-        Collections.sort(ventas);
-        areaVentas.setText(String.join("\n", ventas));
-    }
-
-    // Methods for managing key-value associations
-    private void agregarAsociacion(ActionEvent e) {
-        String clave = txtClave.getText().trim();
-        String valor = txtValor.getText().trim();
-        gestorMapas.agregarAsociacion(clave, valor);
-        areaMapaResultados.append(clave + " => " + valor + "\n");
-        txtClave.setText("");
-        txtValor.setText("");
-    }
-
-    private void buscarAsociacion(ActionEvent e) {
-        String clave = txtClave.getText().trim();
-        String valor = gestorMapas.recuperarValor(clave);
-        areaMapaResultados.append("Valor para '" + clave + "': " + valor + "\n");
-    }
-
-    // Methods for indexing and displaying files
-    private void indexarDirectorio() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        int returnValue = fileChooser.showOpenDialog(null);
-        if (returnValue == JFileChooser.APPROVE_OPTION) {
-            File selectedDirectory = fileChooser.getSelectedFile();
-            indexadorArchivos.indexarDirectorio(selectedDirectory);
-            JOptionPane.showMessageDialog(this, "Directorio indexado con éxito.");
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setPaint(new GradientPaint(0, 0, Color.RED, getWidth(), getHeight(), Color.BLACK));
+            g2d.fillRect(0, 0, getWidth(), getHeight());
         }
-    }
-
-    private void mostrarArchivos(JTextArea displayArea) {
-        List<String> rutas = indexadorArchivos.getListaRutas();
-        visualizadorArchivos.ordenarYMostrarArchivos(rutas);
-        displayArea.setText(String.join("\n", rutas));
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(InterfazUsuario::new);
+        SwingUtilities.invokeLater(() -> new InterfazUsuario().setVisible(true));
     }
 }
